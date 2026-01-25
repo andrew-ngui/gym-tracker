@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>we go jim</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+            text-transform: lowercase;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: none;
+        }
+
+        .stats-header {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats-header h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: #333333;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #555555;
+        }
+
+        .stat-card h3 {
+            font-size: 2.5em;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .stat-card p {
+            font-size: 0.95em;
+            color: #b0b0b0;
+        }
+
+        .setup-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .setup-section h2 {
+            color: #ffffff;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 15px;
+            border: 2px solid #444444;
+            border-radius: 6px;
+            font-size: 1em;
+            background: #333333;
+            color: #e0e0e0;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #666666;
+        }
+
+        button {
+            padding: 10px 25px;
+            background: #444444;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #555555;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .info-text {
+            font-size: 0.9em;
+            color: #b0b0b0;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .info-text a {
+            color: #888888;
+            text-decoration: none;
+        }
+
+        .info-text a:hover {
+            text-decoration: underline;
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .status.loading {
+            display: block;
+            background: #1a3a52;
+            color: #64b5f6;
+        }
+
+        .status.error {
+            display: block;
+            background: #3a1a1a;
+            color: #ef5350;
+        }
+
+        .status.success {
+            display: block;
+            background: #1a3a1a;
+            color: #66bb6a;
+        }
+
+        .legend {
+            display: none;
+        }
+
+        .calendar-container {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .month-section {
+            margin-bottom: 0;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #444444;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .month-header h2 {
+            font-size: 1.8em;
+            color: #ffffff;
+        }
+
+        .month-stats {
+            font-size: 1em;
+            color: #b0b0b0;
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #999999;
+        }
+
+        .week {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #444444;
+            border-radius: 8px;
+            padding: 4px;
+            min-height: 50px;
+            background: #333333;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 0.7em;
+            color: #b0b0b0;
+        }
+
+        .day.other-month {
+            background: #2a2a2a;
+            opacity: 0.5;
+        }
+
+        .day.workout {
+            border-color: #666666;
+            font-weight: bold;
+        }
+
+        .day-number {
+            font-size: 0.85em;
+            color: #777777;
+            margin-bottom: 4px;
+        }
+
+        .muscle-group {
+            font-size: 0.8em;
+            font-weight: 600;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .muscle-group.chest {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .muscle-group.back {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .muscle-group.legs {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .muscle-group.arms {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .muscle-group.shoulders {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .muscle-group.cardio {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .muscle-group.rest {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .day-weekday {
+            font-size: 0.7em;
+            color: #555555;
+            margin-top: 2px;
+        }
+
+        .week-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .week-day-name {
+            text-align: center;
+            font-weight: bold;
+            color: #888888;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 1024px) {
+            .calendar-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats-header {
+                padding: 20px;
+            }
+
+            .calendar-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .month-section {
+                margin-bottom: 10px;
+            }
+
+            .month-header {
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+
+            .month-header h2 {
+                font-size: 1.4em;
+            }
+
+            .week {
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+
+            .day {
+                min-height: 50px;
+                font-size: 0.75em;
+                padding: 3px;
+            }
+
+            .day-number {
+                font-size: 0.75em;
+                margin-bottom: 2px;
+            }
+
+            .muscle-group {
+                font-size: 0.65em;
+                padding: 2px 4px;
+            }
+
+            .week-header {
+                gap: 6px;
+                margin-bottom: 8px;
+            }
+
+            .week-day-name {
+                font-size: 0.8em;
+            }
+
+            .month-stats {
+                flex-direction: column;
+                gap: 10px;
+                font-size: 0.85em;
+            }
+
+            .stat-number {
+                font-size: 1.2em;
+            }
+
+            .stat-label {
+                font-size: 0.75em;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            input[type="text"] {
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-header h1 {
+                font-size: 1.3em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .stat-card h3 {
+                font-size: 1.8em;
+            }
+
+            .stat-card p {
+                font-size: 0.85em;
+            }
+
+            .calendar-container {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .month-header h2 {
+                font-size: 1.2em;
+            }
+
+            .day {
+                min-height: 45px;
+                font-size: 0.7em;
+                padding: 2px;
+            }
+
+            .day-number {
+                font-size: 0.65em;
+            }
+
+            .muscle-group {
+                font-size: 0.6em;
+                padding: 2px 3px;
+            }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="stats-header">
+            <h1>we go jim 2026</h1>
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <h3 id="totalWorkouts">0</h3>
+                    <p>Total Workouts</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="weeksCompleted">0</h3>
+                    <p>Weeks (4+ days)</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="completionRate">0/0</h3>
+                    <p>Weeks on Track</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="legend">
+            <h3>🎯 Muscle Groups</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff6b6b;"></div>
+                    <span>Chest</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4ecdc4;"></div>
+                    <span>Back</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffe66d;"></div>
+                    <span>Legs</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #95e1d3;"></div>
+                    <span>Arms</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #c7b3e5;"></div>
+                    <span>Shoulders</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffa07a;"></div>
+                    <span>Cardio</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="calendar-container" id="calendar"></div>
+    </div>
+
+    <script>
+        const MONTHS = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRZkPWEAwW_AgE9CcYJyXAcRXTrq679IVfuvGTV-QuFsIFVVb43JQtI3vB_RQq08Wzj5GzmpCOKBXyC/pub?gid=0&single=true&output=csv';
+
+        let workoutData = {};
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY = 1000; // milliseconds
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function loadDataWithRetry(retryCount = 0) {
+            showStatus('Loading data...', 'loading');
+
+            // Fetch CSV directly from Google Sheets
+            fetch(CSV_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch CSV');
+                    return response.text();
+                })
+                .then(csv => {
+                    Papa.parse(csv, {
+                        header: true,
+                        complete: (results) => {
+                            workoutData = {};
+                            results.data.forEach(row => {
+                                if (row.Date && row.Muscle) {
+                                    workoutData[row.Date.trim()] = row.Muscle.trim();
+                                }
+                            });
+                            updateStats();
+                            setTimeout(() => {
+                                const status = document.getElementById('status');
+                                status.style.display = 'none';
+                            }, 2000);
+                            renderCalendar();
+                        },
+                        error: (err) => {
+                            showStatus('Error parsing CSV: ' + err.message, 'error');
+                        }
+                    });
+                })
+                .catch(error => {
+                    if (retryCount < MAX_RETRIES) {
+                        const nextRetry = retryCount + 1;
+                        const delay = RETRY_DELAY * nextRetry;
+                        showStatus(`Loading data... (attempt ${nextRetry + 1}/${MAX_RETRIES + 1})`, 'loading');
+                        console.log(`Retry ${nextRetry}/${MAX_RETRIES} in ${delay}ms`);
+                        setTimeout(() => loadDataWithRetry(nextRetry), delay);
+                    } else {
+                        showStatus('Error loading data: ' + error.message + ' (after ' + MAX_RETRIES + ' retries)', 'error');
+                        console.error('Failed to load data after ' + MAX_RETRIES + ' retries:', error);
+                    }
+                });
+        }
+
+        function loadData() {
+            loadDataWithRetry();
+        }
+
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            updateStats();
+
+            for (let month = 0; month < 12; month++) {
+                const monthHtml = renderMonth(month);
+                const monthDiv = document.createElement('div');
+                monthDiv.className = 'month-section';
+                monthDiv.innerHTML = monthHtml;
+                calendar.appendChild(monthDiv);
+            }
+        }
+
+        function updateStats() {
+            const year = 2026;
+            const today = new Date();
+            let totalWorkouts = 0;
+            let weeksWithFourPlus = 0;
+            let weeksElapsed = 0;
+
+            // Count total workouts and weeks with 4+ workouts up to today
+            for (let month = 0; month < 12; month++) {
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                
+                // Don't process months after today
+                if (firstDay > today) break;
+                
+                // If this month extends beyond today, cap it at today
+                const effectiveLastDay = lastDay > today ? today : lastDay;
+                
+                let weekWorkoutCounts = [];
+                let currentWeekCount = 0;
+                let currentWeekStart = new Date(firstDay);
+                currentWeekStart.setDate(currentWeekStart.getDate() - firstDay.getDay());
+
+                for (let d = new Date(currentWeekStart); d <= effectiveLastDay; d.setDate(d.getDate() + 1)) {
+                    const dateStr = formatDate(d);
+                    if (workoutData[dateStr]) {
+                        currentWeekCount++;
+                        totalWorkouts++;
+                    }
+
+                    // Only count complete weeks or partial weeks that include today
+                    if (d.getDay() === 6 || d >= today) {
+                        if (currentWeekCount > 0 || d >= today) {
+                            weekWorkoutCounts.push(currentWeekCount);
+                            weeksElapsed++;
+                            currentWeekCount = 0;
+                        }
+                    }
+                }
+            }
+
+            const completionRate = weeksElapsed > 0 ? Math.round((weeksWithFourPlus / weeksElapsed) * 100) : 0;
+            
+            // Recalculate weeks with 4+ days
+            for (let month = 0; month < 12; month++) {
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                
+                if (firstDay > today) break;
+                
+                const effectiveLastDay = lastDay > today ? today : lastDay;
+                let weekWorkoutCounts = [];
+                let currentWeekCount = 0;
+                let currentWeekStart = new Date(firstDay);
+                currentWeekStart.setDate(currentWeekStart.getDate() - firstDay.getDay());
+
+                for (let d = new Date(currentWeekStart); d <= effectiveLastDay; d.setDate(d.getDate() + 1)) {
+                    const dateStr = formatDate(d);
+                    if (workoutData[dateStr]) {
+                        currentWeekCount++;
+                    }
+
+                    if (d.getDay() === 6 || d >= today) {
+                        weekWorkoutCounts.push(currentWeekCount);
+                        currentWeekCount = 0;
+                    }
+                }
+
+                weeksWithFourPlus += weekWorkoutCounts.filter(count => count >= 4).length;
+            }
+
+            const completionRateRecalc = weeksElapsed > 0 ? Math.round((weeksWithFourPlus / weeksElapsed) * 100) : 0;
+
+            document.getElementById('totalWorkouts').textContent = totalWorkouts;
+            document.getElementById('weeksCompleted').textContent = weeksWithFourPlus;
+            document.getElementById('completionRate').textContent = weeksWithFourPlus + '/' + weeksElapsed;
+        }
+
+        function renderMonth(month) {
+            const year = 2026;
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            const monthWorkouts = getMonthWorkouts(month);
+            const weeksInMonth = Math.ceil((lastDay.getDate() + firstDay.getDay()) / 7);
+
+            let html = `
+                <div class="month-header">
+                    <h2>${MONTHS[month]}</h2>
+                </div>
+                <div class="week-header">
+                    ${WEEKDAYS.map(day => `<div class="week-day-name">${day}</div>`).join('')}
+                </div>
+            `;
+
+            let currentDate = new Date(startDate);
+            for (let week = 0; week < weeksInMonth; week++) {
+                html += '<div class="week">';
+                for (let day = 0; day < 7; day++) {
+                    const dateStr = formatDate(currentDate);
+                    const dayOfMonth = currentDate.getDate();
+                    const isCurrentMonth = currentDate.getMonth() === month;
+                    const muscleGroup = workoutData[dateStr];
+
+                    html += `
+                        <div class="day ${!isCurrentMonth ? 'other-month' : ''} ${muscleGroup ? 'workout' : ''}">
+                            <div class="day-number">${isCurrentMonth ? dayOfMonth : ''}</div>
+                            ${muscleGroup ? `<div class="muscle-group ${muscleGroup.toLowerCase()}">${muscleGroup}</div>` : ''}
+                        </div>
+                    `;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                html += '</div>';
+            }
+
+            return html;
+        }
+
+        function getMonthWorkouts(month) {
+            const year = 2026;
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            let weekWorkoutCounts = [];
+            let currentWeekCount = 0;
+            let currentWeekStart = new Date(firstDay);
+            currentWeekStart.setDate(currentWeekStart.getDate() - firstDay.getDay());
+
+            for (let d = new Date(currentWeekStart); d <= lastDay; d.setDate(d.getDate() + 1)) {
+                const dateStr = formatDate(d);
+                if (workoutData[dateStr]) {
+                    currentWeekCount++;
+                }
+
+                // Check if we've reached the end of a week (Saturday)
+                if (d.getDay() === 6) {
+                    weekWorkoutCounts.push(currentWeekCount);
+                    currentWeekCount = 0;
+                }
+            }
+
+            // Count workouts in the month
+            let totalCount = 0;
+            for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+                if (workoutData[formatDate(d)]) {
+                    totalCount++;
+                }
+            }
+
+            // Count weeks with 4+ workouts
+            const weeksAboveThreshold = weekWorkoutCounts.filter(count => count >= 4).length;
+
+            return {
+                count: totalCount,
+                weeks: weeksAboveThreshold
+            };
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Load data on page load
+        window.addEventListener('load', () => {
+            loadData();
+        });
+    </script>
+</body>
+</html>
