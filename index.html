@@ -533,7 +533,7 @@
             'January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'
         ];
-        const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRZkPWEAwW_AgE9CcYJyXAcRXTrq679IVfuvGTV-QuFsIFVVb43JQtI3vB_RQq08Wzj5GzmpCOKBXyC/pub?gid=0&single=true&output=csv';
 
         let workoutData = {};
@@ -595,6 +595,12 @@
             loadDataWithRetry();
         }
 
+        function getWeekStartDate(date) {
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+            return new Date(date.setDate(diff));
+        }
+
         function renderCalendar() {
             const calendar = document.getElementById('calendar');
             calendar.innerHTML = '';
@@ -630,7 +636,7 @@
                 let weekWorkoutCounts = [];
                 let currentWeekCount = 0;
                 let currentWeekStart = new Date(firstDay);
-                currentWeekStart.setDate(currentWeekStart.getDate() - firstDay.getDay());
+                currentWeekStart = getWeekStartDate(new Date(currentWeekStart));
 
                 for (let d = new Date(currentWeekStart); d <= effectiveLastDay; d.setDate(d.getDate() + 1)) {
                     const dateStr = formatDate(d);
@@ -639,8 +645,8 @@
                         totalWorkouts++;
                     }
 
-                    // Only count complete weeks or partial weeks that include today
-                    if (d.getDay() === 6 || d >= today) {
+                    // Only count complete weeks or partial weeks that include today (ends on Sunday)
+                    if (d.getDay() === 0 || d >= today) {
                         if (currentWeekCount > 0 || d >= today) {
                             weekWorkoutCounts.push(currentWeekCount);
                             weeksElapsed++;
@@ -663,7 +669,7 @@
                 let weekWorkoutCounts = [];
                 let currentWeekCount = 0;
                 let currentWeekStart = new Date(firstDay);
-                currentWeekStart.setDate(currentWeekStart.getDate() - firstDay.getDay());
+                currentWeekStart = getWeekStartDate(new Date(currentWeekStart));
 
                 for (let d = new Date(currentWeekStart); d <= effectiveLastDay; d.setDate(d.getDate() + 1)) {
                     const dateStr = formatDate(d);
@@ -671,7 +677,7 @@
                         currentWeekCount++;
                     }
 
-                    if (d.getDay() === 6 || d >= today) {
+                    if (d.getDay() === 0 || d >= today) {
                         weekWorkoutCounts.push(currentWeekCount);
                         currentWeekCount = 0;
                     }
@@ -691,8 +697,7 @@
             const year = 2026;
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            const startDate = getWeekStartDate(new Date(firstDay));
 
             const monthWorkouts = getMonthWorkouts(month);
             const weeksInMonth = Math.ceil((lastDay.getDate() + firstDay.getDay()) / 7);
@@ -736,8 +741,7 @@
 
             let weekWorkoutCounts = [];
             let currentWeekCount = 0;
-            let currentWeekStart = new Date(firstDay);
-            currentWeekStart.setDate(currentWeekStart.getDate() - firstDay.getDay());
+            let currentWeekStart = getWeekStartDate(new Date(firstDay));
 
             for (let d = new Date(currentWeekStart); d <= lastDay; d.setDate(d.getDate() + 1)) {
                 const dateStr = formatDate(d);
@@ -745,8 +749,8 @@
                     currentWeekCount++;
                 }
 
-                // Check if we've reached the end of a week (Saturday)
-                if (d.getDay() === 6) {
+                // Check if we've reached the end of a week (Sunday)
+                if (d.getDay() === 0) {
                     weekWorkoutCounts.push(currentWeekCount);
                     currentWeekCount = 0;
                 }
